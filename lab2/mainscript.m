@@ -78,19 +78,55 @@ pdfparzen_para = para_parzen(train, 0.001);
 % base_ercf(3) = mean(bayescls(test(:,2:end), @pdf_parzen, pdfparzen_para) != test(:,1));
 % base_ercf
 
-% % W kolejnym punkcie przyda si� funkcja reduce, kt�ra redukuje liczb� pr�bek w poszczeg�lnych
-% % klasach (w tym przypadku redukcja b�dzie taka sama we wszystkich klasach - ZBIORU UCZ�CEGO)
-% % Poniewa� reduce ma losowa� pr�bki, to eksperyment nale�y powt�rzy� 5 (lub wi�cej) razy
-% % W sprawozdaniu prosz� poda� tylko warto�� �redni� i odchylenie standardowe wsp��czynnika b��du
-% % Wyobra�am sobie, �e w ka�dym powt�rzeniu eksperymentu tworz�
-% % now� wersj� zbioru ucz�cego:
-% %   reduced_train = reduce(train, parts(i) * ones(1, class_count))
+% W kolejnym punkcie przyda si� funkcja reduce, kt�ra redukuje liczb� pr�bek w poszczeg�lnych
+% klasach (w tym przypadku redukcja b�dzie taka sama we wszystkich klasach - ZBIORU UCZ�CEGO)
+% Poniewa� reduce ma losowa� pr�bki, to eksperyment nale�y powt�rzy� 5 (lub wi�cej) razy
+% W sprawozdaniu prosz� poda� tylko warto�� �redni� i odchylenie standardowe wsp��czynnika b��du
+% Wyobra�am sobie, �e w ka�dym powt�rzeniu eksperymentu tworz�
+% now� wersj� zbioru ucz�cego:
+%   reduced_train = reduce(train, parts(i) * ones(1, class_count))
 
 % parts = [0.1 0.25 0.5];
 % rep_cnt = 5; % przynajmniej
+% class_count = 8;
 
-% % YOUR CODE GOES HERE 
-% %
+% printf("Starting experiments\n");
+% results = {};
+% for i=1:columns(parts)
+%     printf("experiment for %f\n", parts(i));
+%     error_matrix = zeros(3, rep_cnt);
+%     for j=1:rep_cnt
+        
+%         printf("Reducing train set...\n");
+        
+%         red_train = reduce(train, parts(i) * ones(1, class_count));
+        
+%         printf("Para indep...\n");
+%         red_indep_para = para_indep(red_train);
+%         printf("Para multi...\n");
+%         red_multi_para = para_multi(red_train);
+%         printf("Para parzen...\n");
+%         red_parzen_para = para_parzen(red_train, 0.001);
+
+
+%         printf("bayes indep...\n");
+%         error_matrix(1, j) = mean(
+%             bayescls(test(:, 2:end), @pdf_indep, red_indep_para) !=  test(:, 1));
+%         printf("bayes multi...\n");
+%         error_matrix(2, j) = mean(
+%             bayescls(test(:, 2:end), @pdf_multi, red_multi_para) != test(:, 1));
+%         printf("bayes parzen...\n");
+%         error_matrix(3, j) = mean(
+%             bayescls(test(:, 2:end), @pdf_parzen, red_parzen_para) != test(:, 1));
+%     end
+%     printf("Saving results...\n");
+%     results{1, i} = parts(i);
+%     results{2, i}(1, :) = [mean(error_matrix(1, :)), std(error_matrix(1, :))];
+%     results{2, i}(2, :) = [mean(error_matrix(2, :)), std(error_matrix(2, :))];
+%     results{2, i}(3, :) = [mean(error_matrix(3, :)), std(error_matrix(3, :))];
+% end 
+% printf("All done...\n");
+% results
 
 
 
@@ -102,40 +138,76 @@ pdfparzen_para = para_parzen(train, 0.001);
 % % YOUR CODE GOES HERE 
 % %
 
-
+% for i=1:columns(parzen_widths)
+%     printf("Computing parzen for width: %f\n", parzen_widths(i));
+%     pdf_parzen_para = para_parzen(train, parzen_widths(i));
+%     parzen_res(i) = mean(bayescls(test(:, 2:end), @pdf_parzen, pdf_parzen_para) != test(:, 1)); 
+% end 
 
 % [parzen_widths; parzen_res]
-% % Tu a� prosi si� do�o�y� do danych numerycznych wykres
+
+% % % Tu a� prosi si� do�o�y� do danych numerycznych wykres
 % semilogx(parzen_widths, parzen_res)
 
-% % W punkcie 6 redukcja dotyczy ZBIORU TESTOWEGO, natomiast warto
-% % zadba� o to, �eby parametry dla funkcji pdf by�y policzone
-% % na ca�ym zbiorze ucz�cym (po poprzednich eksperymentach tak 
-% % raczej nie jest)
-% % Poniewa� losujemy pr�bki, to wypada powt�rzy� eksperyment 
-% % stosown� liczb� razy i u�redni� wyniki
-% % reduced_test = reduce(test, parts) 
+% W punkcie 6 redukcja dotyczy ZBIORU TESTOWEGO, natomiast warto
+% zadba� o to, �eby parametry dla funkcji pdf by�y policzone
+% na ca�ym zbiorze ucz�cym (po poprzednich eksperymentach tak 
+% raczej nie jest)
+% Poniewa� losujemy pr�bki, to wypada powt�rzy� eksperyment 
+% stosown� liczb� razy i u�redni� wyniki
+% reduced_test = reduce(test, parts) 
 
 % apriori = [0.165 0.085 0.085 0.165 0.165 0.085 0.085 0.165];
 % parts = [1.0 0.5 0.5 1.0 1.0 0.5 0.5 1.0];
 % rep_cnt = 5; % powt�rka, �eby nie zapomnie�
 
-% % YOUR CODE GOES HERE 
-% %
+% conf_mat = {}
+% error_matrix = zeros(3, rep_cnt);
+% for i=1:rep_cnt
+%     printf("Iteration %d\n", i);
+%     reduced_test = reduce(test, parts);
+
+%     res_indep = bayescls(reduced_test(:, 2:end), @pdf_indep, pdfindep_para, apriori);
+%     error_matrix(1, i) = mean(res_indep != reduced_test(:, 1));
+%     conf_mat{1, i} = confMx(reduced_test(:, 1), res_indep);
+    
+%     res_multi = bayescls(reduced_test(:, 2:end), @pdf_multi, pdfmulti_para, apriori);
+%     error_matrix(2, i) = mean(res_multi != reduced_test(:, 1));
+%     conf_mat{2, i} = confMx(reduced_test(:, 1), res_multi);
+    
+%     res_parzen = bayescls(reduced_test(:, 2:end), @pdf_parzen, pdfparzen_para, apriori);
+%     error_matrix(3, i) = mean(res_parzen != reduced_test(:, 1));
+%     conf_mat{3, i} = confMx(reduced_test(:, 1), res_parzen);
+% end
+
+% printf("Average errors...\n");
+% mean(error_matrix(1, :))
+% mean(error_matrix(2, :))
+% mean(error_matrix(3, :))
+% printf("Confusion matrices...\n");
+% conf_mat
 
 
-% % W ostatnim punkcie trzeba zastanowi� si� nad normalizacj�
-% std(train(:,2:end))
-% % Mo�e warto sprawdzi�, jak to wygl�da w poszczeg�lnych klasach?
+% W ostatnim punkcie trzeba zastanowi� si� nad normalizacj�
+a = std(train(:,2:end))
+max(train(:, 2:end))
+min(train(:, 2:end))
+mean(train(:, 2:end))
+% Mo�e warto sprawdzi�, jak to wygl�da w poszczeg�lnych klasach?
 
-% % Normalizacja potrzebna?
-% % Je�li TAK, to jej parametry s� liczone TYLKO na zbiorze ucz�cym
-% % Procedura normalizacji jest aplikowana do zbioru ucz�cego i testowego
-% % Poniewa� zbiory ucz�cy i testowy s� przyzwoitej wielko�ci 
-% % klasyfikujecie Pa�stwo testowy za pomoc� ucz�cego (nie ma
-% % potrzeby u�ycia leave-one-out)
+% Normalizacja potrzebna?
+% Je�li TAK, to jej parametry s� liczone TYLKO na zbiorze ucz�cym
+% Procedura normalizacji jest aplikowana do zbioru ucz�cego i testowego
+% Poniewa� zbiory ucz�cy i testowy s� przyzwoitej wielko�ci 
+% klasyfikujecie Pa�stwo testowy za pomoc� ucz�cego (nie ma
+% potrzeby u�ycia leave-one-out)
 
 
-% % YOUR CODE GOES HERE 
-% %
+% YOUR CODE GOES HERE 
+
+labels = zeros(rows(test), 1);
+for i=1:rows(test)
+    labels(i) = cls1nn(test(i, 2:end), train);
+end
+mean(labels != test(:, 1))
 
