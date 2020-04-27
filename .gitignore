@@ -1,0 +1,7 @@
+train/*
+*.zip
+*.gz
+*/octave-workspace/
+*/octave-workspace
+**/octave-workspace
+octave-workspace
