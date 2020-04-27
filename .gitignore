@@ -1,4 +1,4 @@
-train/*
+**/train/*
 *.zip
 *.gz
 */octave-workspace/
